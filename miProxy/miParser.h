@@ -11,15 +11,22 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include "miHandler.h"
-#include "miCalculator.h"
-#include "miChooser.h"
-#include "miLogger.h"
-#include "miClient.h"
-#include "miServer.h"
+// #include "DNSHeader.h"
+// #include "DNSQuestion.h"
+// #include "DNSRecord.h"
+
+// #include "miHandler.h"
+// #include "miCalculator.h"
+// #include "miChooser.h"
+// #include "miLogger.h"
+// #include "miClient.h"
+// #include "miServer.h"
 // #include "miParser.h"
 
-char *parse(char *buf, double T_cur)
+#define MAXCLIENTS 30
+#define MAXSIZE 400000
+
+char *parse(char *buf, char *chunk)
 {
     // Initialize parameters
     char request[MAXSIZE];

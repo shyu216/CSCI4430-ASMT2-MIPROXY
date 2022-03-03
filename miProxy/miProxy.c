@@ -11,17 +11,20 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include "DNSHeader.h"
-#include "DNSQuestion.h"
-#include "DNSRecord.h"
+// #include "DNSHeader.h"
+// #include "DNSQuestion.h"
+// #include "DNSRecord.h"
 
 #include "miHandler.h"
-#include "miCalculator.h"
-#include "miChooser.h"
-#include "miLogger.h"
-#include "miClient.h"
-#include "miServer.h"
-#include "miParser.h"
+// #include "miCalculator.h"
+// #include "miChooser.h"
+// #include "miLogger.h"
+// #include "miClient.h"
+// #include "miServer.h"
+// #include "miParser.h"
+
+// #define MAXCLIENTS 30
+// #define MAXSIZE 400000
 
 int main(int argc, char *argv[])
 {

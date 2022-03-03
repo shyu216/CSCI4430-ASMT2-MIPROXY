@@ -100,8 +100,18 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                     }
                     else
                     {
+                        // Choose bit rate
+                        char *chunk = choose_bitrate(T_cur);
+
                         // Parse buf and generate request
-                        char *request = parse(buf, T_cur);
+                        char *request = parse(buf, chunk);
+
+                        // Send to server and recv
+
+                        // Calculate time
+                        T_cur = calculate(T_cur, T_new, alpha);
+                        
+                        // Send to client
                     }
                 }
             }
