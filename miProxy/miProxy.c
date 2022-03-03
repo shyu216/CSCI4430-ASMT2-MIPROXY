@@ -19,11 +19,6 @@
 #include "miChooser.h"
 #include "miLogger.h"
 
-int handler(int listen_port, char *www_ip, double alpha, char *log = argv[5])
-{
-    
-}
-
 int main(int argc, char *argv[])
 {
     if (argc == 6 && strcmp(argv[1], "--nodns") == 0)
