@@ -15,3 +15,7 @@ sudo dhclient ens33 -v
 ```
 sudo date +%Y%m%d -s 20180101
 ```
+
+### useful link
+https://github.com/mgild/Networkp2.git  
+https://github.com/heaventourist/Video-Streaming-via-CDN.git
