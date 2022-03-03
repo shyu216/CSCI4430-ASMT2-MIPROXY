@@ -1,6 +1,6 @@
-# code在miProxy里，能写一点是一点吧，我先写main。。。现在写handler。。。现在写parser（建好proxy的client和server了，现在parse the http header）。。。
+# code在miProxy里,建好proxy的client和server了，下一步parse the http header。。。
 
-<img src="ss.png" title="firefox" alt="" width="350" height="256"/>  
+<img src="ss.png" title="firefox" alt=""/>  
 
 ### share files from vmware in xubuntu 
 ```
