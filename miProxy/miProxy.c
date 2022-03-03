@@ -26,9 +26,9 @@ int main(int argc, char *argv[])
         int listen_port = atoi(argv[2]);
         char *www_ip = argv[3];
         double alpha = atof(argv[4]);
-        char *log = argv[5];
+        char *log_file = argv[5];
 
-        return handler(listen_port, www_ip, alpha, log);
+        return handler(listen_port, www_ip, alpha, log_file);
     }
     else if (argc == 7 && strcmp(argv[1], "--nodns") == 0)
     {

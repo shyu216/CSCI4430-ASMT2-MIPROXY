@@ -45,7 +45,7 @@ int make_client_sockaddr(struct sockaddr_in *addr, const char *hostname, int por
     return 0;
 }
 
-int handler(int listen_port, char *www_ip, double alpha, char *log = argv[5])
+int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 {
     // (1) Create socket
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -78,13 +78,13 @@ int handler(int listen_port, char *www_ip, double alpha, char *log = argv[5])
     }
 
     // (4) Begin listening for incoming connections.
-	int queue_size = 1000;
-	if (listen(sockfd, queue_size) == -1)
-	{
-		//perror("Error listening connection");
-		exit(0);
-	}
+    int queue_size = 1000;
+    if (listen(sockfd, queue_size) == -1)
+    {
+        // perror("Error listening connection");
+        exit(0);
+    }
 
-	// (5) Fake Server function
+    // (5) Fake Server function
     printf("this server may listen to the browser and create a client to connect to the real server for it");
 }
