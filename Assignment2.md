@@ -7,7 +7,7 @@
 * [Clarifications](#clarifications)
 * [Environment Setup](#environment)
 * [Task](#task): Bitrate Adaptation in HTTP Proxy
-* [Bonus Task](#bonus_task): DNS Load Balancing
+* [Bonus Task](#bonus_task): **To Be Updated**
 * [Submission Instructions](#submission-instr)
 * [Autograder](#autograder)
 
@@ -148,7 +148,7 @@ To switch to a higher bitrate, e.g., 1000 Kbps, the proxy should modify the URI 
 ### Running `miProxy`
 You will run the miProxy with the following command. 
 
-`./miProxy <listen-port> <www-ip> <alpha> <log>`
+`./miProxy --nodns <listen-port> <www-ip> <alpha> <log>`
 
 * `listen-port` The TCP port your proxy should listen on for accepting connections from your browser.
 * `www-ip` Argument specifying the IP address of the web server from which the proxy should request video chunks. Again, this web server is reachable at port TCP port `80`.
@@ -179,83 +179,9 @@ To play a video through your proxy, you launch an instance of the Apache server,
 
 ## Bonus Task: DNS Load Balancing
 
-To spread the load of serving videos among a group of servers, most CDNs perform some kind of load balancing. A common technique is to configure the CDN's authoritative DNS server to resolve a single domain name to one out of a set of IP addresses belonging to replicated content servers. The DNS server can use various strategies to spread the load, e.g., round-robin, shortest geographic distance, or current server load (which requires servers to periodically report their statuses to the DNS server). 
+**___NOTE___**: The bonus task will be updated soon. This part is optional but you will receive some bonus marks after finishing this part. 
 
-In this part, you will write a simple DNS server that implements load balancing in **round-robin** method. 
 
-### DNS query
-
-1. Each time `miProxy` receives a connection from browser, it will query the DNS `nameserver` for the IP address of the server. 
-1. The format of DNS quesy message can be determined by yourself. (**Remember to use `htonl` and `ntohl` when sending/receiving integers over the network!**)
-1. Your `nameserver` should record each query based on the log format specified in "nameserver logging".
-
-### Round-Robin Load Balancer
-
-You will implement `nameserver` as a simple round-robin based DNS load balancer. It should take as input a list of video server IP addresses on the command line; it responds to each request by returning the next IP address in the list, cycling back to the beginning when the list is exhausted.
-
-`nameserver` will bind to an IP address and port specified as command line arguments. 
-
-Example text file format in `sample_round_robin.txt`:
-
-```
-10.0.0.1
-10.0.0.2
-10.0.0.3
-```
-
-### Running miProxy
-
-In this mode of operation your proxy should obtain the web server's IP address by querying your DNS server for the IP address of the web server.
-
-`./miProxy --dns <listen-port> <dns-ip> <dns-port> <alpha> <log>`
-
-* `--dns` This flag indicates the proxy will use DNS to obtain the web server IP.
-* `listen-port` The TCP port your proxy should listen on for accepting connections from your browser.
-* `dns-ip` IP address of the DNS server.
-* `dns-port` Port number DNS server listens on.
-* `alpha` A float in the range [0, 1]. Uses this as the coefficient in your EWMA throughput estimate.
-* `log` The file path to which you should log the messages as described below.
-
-> *Note: for simplicity, arguments will appear exactly as shown above during testing and grading. Error handling with the arguments is not explicitly tested but is highly recommended. At least printing the correct usage if something went wrong is worthwhile.*
-
-> *Also note: we are using our own implementation of DNS on top of TCP, not UDP.*
-
-### miProxy Logging
-
-`miProxy` must create a log of its activity in a very particular format. If the log file already exists, `miProxy` overwrites the log. *After each chunk-file response from the web server*, it should append the following line to the log:
-
-`<browser-ip> <chunkname> <server-ip> <duration> <tput> <avg-tput> <bitrate>`
-
-* `broswer-ip` IP address of the browser issuing the request to the proxy.
-* `chunkname` The name of the file your proxy requested from the web server (that is, the modified file name in the modified HTTP GET message).
-* `server-ip` The IP address of the server to which the proxy forwarded this request.
-* `duration` A floating point number representing the number of seconds it took to download this chunk from the web server to the proxy.
-* `tput` The throughput you measured for the current chunk in Kbps.
-* `avg-tput` Your current EWMA throughput estimate in Kbps.
-* `bitrate` The bitrate your proxy requested for this chunk in Kbps.
-
-### Nameserver
-
-To operate `nameserver`, it should be invoked as follows:
-
-`./nameserver --rr <port> <servers> <log>`
-
-* `--rr` This flag specifies that `nameserver` will operate in the round-robin based load balancing scheme.
-* `port` The port on which your server should listen.
-* `servers` A text file containing a list of IP addresses, one per line, belonging to content servers if `--rr` is specified. 
-* `log` The file path to which you should log the messages as described below.
-
-> *Note: for simplicity, arguments will appear exactly as shown above during testing and grading. Error handling with the arguments is not explicitly tested but is highly recommended. At least printing the correct usage if something went wrong is worthwhile.*
-
-### Nameserver Logging
-
-Your DNS server must log its activity in a specific format. If the log specified by the user already exists, your DNS server overwrites the log. *After each* valid DNS query it services, it should append the following line to the log:
-
-`<proxy-ip> <response-ip> <client-ip>`
-
-* `proxy-ip` The IP address of the proxy who sent the query.
-* `response-ip` The IP address you return in response.
-* `client-ip` The IP address of the browser client which will connect to the server of the IP address response.
 
 <a name="submission-instr"></a>
 
@@ -272,8 +198,7 @@ $ tree ./p2-<your-SID>/
 ├── miProxy
 │   ├── Makefile <- supports "make clean" and "make"
 │   ├── ** source c or cpp files **
-│   ├── miProxy  <- Binary executable present after running "make"
-│   └── <**NEW**> nameserver <- Binary executable present after running "make" 
+│   └── miProxy  <- Binary executable present after running "make"
 └── starter_files
     ├── launch_firefox.py
     └── start_server.py
