@@ -1,4 +1,6 @@
-# code在miProxy里，能写一点是一点吧，我先写main。。。现在写handler。。。
+# code在miProxy里，能写一点是一点吧，我先写main。。。现在写handler。。。现在写parser（建好proxy的client和server了，现在parse the http header）。。。
+
+<img src="ss.png" title="firefox" alt="" width="350" height="256"/>  
 
 ### share files from vmware in xubuntu 
 ```
@@ -24,7 +26,8 @@ https://github.com/heaventourist/Video-Streaming-via-CDN.git
 
 ### firefox header
 ```
-Message GET /index.html HTTP/1.1
+Message 
+GET /index.html HTTP/1.1
 Host: 127.0.0.1:8888
 User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8

@@ -21,6 +21,7 @@
 #include "miLogger.h"
 #include "miClient.h"
 #include "miServer.h"
+#include "miParser.h"
 
 int main(int argc, char *argv[])
 {
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
     {
         // bonus part here.
         printf("We dont have bonus part.\n");
+        printf("if you get the ip, you can return handler(listen_port, www_ip, alpha, log_file);");
         return 1;
     }
     else
