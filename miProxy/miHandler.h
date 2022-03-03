@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "DNSHeader.h"
 #include "DNSQuestion.h"
@@ -18,10 +19,14 @@
 #include "miCalculator.h"
 #include "miChooser.h"
 #include "miLogger.h"
+#include "miClient.h"
+#include "miServer.h"
+
+#define MAXCLIENTS 30
+#define MAXSIZE 400000
 
 int make_server_sockaddr(struct sockaddr_in *addr, int port)
 {
-
     addr->sin_family = AF_INET;
     addr->sin_addr.s_addr = INADDR_ANY;
     addr->sin_port = htons((unsigned short int)port);
@@ -31,7 +36,6 @@ int make_server_sockaddr(struct sockaddr_in *addr, int port)
 
 int make_client_sockaddr(struct sockaddr_in *addr, const char *hostname, int port)
 {
-
     addr->sin_family = AF_INET;
     struct hostent *host = gethostbyname(hostname);
     if (host == nullptr)
@@ -45,7 +49,7 @@ int make_client_sockaddr(struct sockaddr_in *addr, const char *hostname, int por
     return 0;
 }
 
-int handler(int listen_port, char *www_ip, double alpha, char *log_file)
+int make_server(int port)
 {
     // (1) Create socket
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -63,28 +67,102 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
         exit(0);
     }
 
-    // (3) Create a sockaddr_in struct for the proper port and bind() to it.
+    // (3) Create a sockaddr_in struct for the proper port and bind() to it
     struct sockaddr_in addr;
-    if (make_server_sockaddr(&addr, listen_port) == -1)
+    if (make_server_sockaddr(&addr, port) == -1)
     {
         exit(0);
     }
 
-    // (3b) Bind to the port.
+    // (3b) Bind to the port
     if (bind(sockfd, (sockaddr *)&addr, sizeof(addr)) == -1)
     {
         // perror("Error binding stream socket");
         exit(0);
     }
 
-    // (4) Begin listening for incoming connections.
-    int queue_size = 1000;
-    if (listen(sockfd, queue_size) == -1)
+    // (4) Begin listening for incoming connections
+    if (listen(sockfd, MAXCLIENTS) == -1)
     {
         // perror("Error listening connection");
         exit(0);
     }
 
-    // (5) Fake Server function
-    printf("this server may listen to the browser and create a client to connect to the real server for it");
+    // (5) Return
+    return sockfd;
+}
+
+int handler(int listen_port, char *www_ip, double alpha, char *log_file)
+{
+    // Initialize sockets
+    int proxyfd = make_server(listen_port);
+
+    struct sockaddr_in addr;
+    int addrlen = sizeof(addr);
+    int clientfd;
+
+    // Initialize socket descriptors
+    fd_set fds;
+
+    // Listen forever
+    while (1)
+    {
+        // Clear and Add sockets to set
+        FD_ZERO(&fds);
+        FD_SET(proxyfd, &fds);
+
+        // Select
+        if (select(FD_SETSIZE, &fds, NULL, NULL, NULL) == -1 && errno != EINTR)
+        {
+            perror("select error");
+        }
+
+        for (int i = 0; i < MAXCLIENTS; ++i)
+        {
+            if (FD_ISSET(i, &fds))
+            {
+
+                // Listen new connections
+                if (i == proxyfd)
+                {
+                    clientfd = accept(proxyfd, (struct sockaddr *)&addr,
+                                      (socklen_t *)&addrlen);
+
+                    if (clientfd == -1)
+                    {
+                        perror("accept error");
+                    }
+                    else
+                    {
+                        FD_SET(clientfd, &fds);
+
+                        // Somebody connected, get their details and print
+                        printf("\n---New client connection---\n");
+                        printf("socket fd is %d , ip is : %s , port : %d \n", clientfd, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+                    }
+                }
+                // Handle old connections
+                else
+                {
+                    char buf[MAXSIZE];
+                    int nbytes = read(i, buf, sizeof(buf));
+                    if (nbytes == 0)
+                    {
+                        // Somebody disconnected, get their details and print
+                        printf("\n---Client disconnected---\n");
+                        printf("socket ip is : %s , port : %d \n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+
+                        // Close the socket and mark as 0 in list for reuse
+                        close(i);
+                        FD_CLR(i, &fds);
+                    }
+                    else
+                    {
+                        printf("parse the header and resend to server...\n");
+                        exit(1);
+                    }
+                }
+            }
+        }
+    }
 }

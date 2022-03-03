@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "DNSHeader.h"
 #include "DNSQuestion.h"
@@ -18,6 +19,8 @@
 #include "miCalculator.h"
 #include "miChooser.h"
 #include "miLogger.h"
+#include "miClient.h"
+#include "miServer.h"
 
 int main(int argc, char *argv[])
 {
