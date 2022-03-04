@@ -345,7 +345,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     {
                         strcpy(request, buf);
                     }
-                    // !!! buf 不对就没法receive
+                    // !!! buf 不对就没法 receive， 直接卡死
 
                     /*
                     (2) Send revised request
@@ -372,7 +372,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     memset(buf, 0, CONTENTLEN * sizeof(char));
                     printf("Done\n");
 
-// Make sure server will reply
+                    // Make sure server will reply
                     strcpy(buf, "\r\n\r\n");
                     nbytes = (ssize_t)send(proxyfd2, request, sizeof(request), 0);
                     memset(buf, 0, CONTENTLEN * sizeof(char));
@@ -507,6 +507,19 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         // perror("Error streaming video");
                         exit(0);
                     }
+
+                    printf("###################################################################\n\n");
+
+                    printf("%s", buf);
+
+                    printf("###################################################################\n\n");
+
+                    // Make sure server will reply
+                    memset(buf, 0, CONTENTLEN * sizeof(char));
+                    strcpy(buf, "\0\0\0\0");
+                    nbytes = (ssize_t)send(proxyfd2, request, sizeof(request), 0);
+                    memset(buf, 0, CONTENTLEN * sizeof(char));
+
                 }
             }
         }

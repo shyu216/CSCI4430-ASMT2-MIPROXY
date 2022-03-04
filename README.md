@@ -1,7 +1,30 @@
-# code在miProxy里,建好proxy的client和server了，下一步parse the http header。。。
+# 开始debug
+# 运行步骤
+### 1. change time to enable flash
+```
+sudo date +%Y%m%d -s 20180101
+```
+### 2. 启动server
+```
+sudo python start_server.py 8
+```
+### 3. 启动proxy
+```
+make
+./miProxy --nodns 8888 127.0.0.1 0.5 log.txt
+```
+### 3. 启动浏览器
+```
+sudo python launch_firefox.py 1
+```
+
 
 <img src="ss.png" title="firefox" alt=""/>  
+<img src="Screenshot_2018-01-01_00-06-48.png" title="firefox" alt=""/>  
+<img src="Screenshot_2018-01-01_00-28-39.png" title="firefox" alt=""/> 
 
+
+# 一些配置
 ### share files from vmware in xubuntu 
 ```
 sudo vim /etc/fstab
@@ -15,15 +38,13 @@ sudo ip link set ens33 up
 sudo dhclient ens33 -v
 ```
 
-### change time to enable flash
-```
-sudo date +%Y%m%d -s 20180101
-```
 
 ### useful link
 https://github.com/mgild/Networkp2.git  
 https://github.com/heaventourist/Video-Streaming-via-CDN.git
 
+
+# 一些输出
 ### firefox header
 ``` 
 GET /index.html HTTP/1.1
