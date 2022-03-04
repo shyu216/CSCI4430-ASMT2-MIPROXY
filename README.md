@@ -72,7 +72,7 @@ Apache/2.2.32 (Unix)
 ```
 
 ### server response index.html
-```
+```html
 HTTP/1.1 200 OK
 Date: Mon, 01 Jan 2018 00:35:17 GMT
 Server: Apache/2.2.32 (Unix)
