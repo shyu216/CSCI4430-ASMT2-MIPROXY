@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/time.h>
+
 #include <time.h>
 
 #define MAXCLIENTNUM 16
@@ -179,7 +180,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
     */
 
     // Open log file
-    File *logFile;
+    FILE *logFile;
     logFile = fopen(filename, "w+");
     if (logFile == NULL)
     {
@@ -233,7 +234,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                 if (i == proxyfd)
                 {
                     // Accept
-                    clientfd[clientnum] = accept(proxyfd, (struct sockaddr *)&addr[clientnum], (socklen_t *)&addrlen[clientnum]);
+                    clientfd[clientnum] = accept(proxyfd, (struct sockaddr *)&addr[clientnum], (socklen_t *)&addrlen);
                     if (clientfd[clientnum] == -1)
                     {
                         perror("accept error");
@@ -290,12 +291,12 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     /*
                     (1) Recv the request
                     */
-                    printf("\n\n###################################################################\n\n");
+                    printf("###################################################################\n\n");
 
                     nbytes = (ssize_t)recv(i, buf, sizeof(buf), 0);
                     printf("%s", buf);
 
-                    printf("\n\n###################################################################\n\n");
+                    printf("###################################################################\n\n");
                     // nbytes = send(proxyfd2, buf, sizeof(buf), 0);
                     // nbytes = recv(proxyfd2, buf, sizeof(buf), 0);
                     // nbytes = send(i, buf, sizeof(buf), 0);
@@ -310,7 +311,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     }
 
                     // Parse content type
-                    int nbytes = readline(buf, line_buf, sizeof(buf), offset);
+                    nbytes = readline(buf, line_buf, sizeof(buf), offset);
                     sscanf(line_buf, "%s %s %s", method, uri, version);
 
                     // Read the tail
@@ -341,44 +342,53 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     {
                         strcpy(request, buf);
                     }
+                    !!! 注意一下这些尾巴，不齐就有错误。
+                    // strcpy(request, "\r\n");
 
                     /*
                     (2) Send revised request
                     */
 
-                   // Send
-                    nbytes = (ssize_t)send(proxyfd2, request, HEADERLEN * sizeof(char), 0);
+                    // Send
+                    printf("Send...");
+                    nbytes = (ssize_t)send(proxyfd2, request, sizeof(request), 0);
                     if (nbytes == -1)
                     {
                         // perror("Error sending request message");
                         exit(0);
                     }
+                    printf("nbytes is %d, Done\n", nbytes);
 
-                    printf("\n\n###################################################################\n\n");
+                    printf("###################################################################\n\n");
 
                     printf("%s", request);
 
-                    printf("\n\n###################################################################\n\n");
-
+                    printf("###################################################################\n\n");
 
                     // Clean buf
-                    memset(buf, 0, CONTENTLEN * sizeof(buf));
+                    printf("Clean buf...");
+                    memset(buf, 0, CONTENTLEN * sizeof(char));
+                    printf("Done\n");
 
                     /*
                     (3) Recv response
                     */
 
                     // Start timing
+                    printf("Start timing...");
                     clock_t start, end;
                     start = clock();
+                    printf("start time: %ld, Done\n", start);
 
                     // Recv first chunk
-                    nbytes = (ssize_t)recv(proxyfd2, buf, sizeof(buf), 0);
+                    printf("Recv first chunk...");
+                    nbytes = (ssize_t)recv(proxyfd2, buf, HEADERLEN * sizeof(char), 0);
                     if (nbytes == -1)
                     {
                         // perror("Error streaming video");
                         exit(0);
                     }
+                    printf("Done\n");
 
                     // Content length parameters
                     int first_read = nbytes;
@@ -386,12 +396,14 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     int content_length = 0;
 
                     // Parse content length
-                    int offset = 0;
+                    offset = 0;
+                    printf("Parse content length\n");
                     while (nbytes)
                     {
                         memset(line_buf, 0, HEADERLEN * sizeof(char));
                         nbytes = readline(buf, line_buf, sizeof(line_buf), offset);
 
+                        printf("%s\n", line_buf);
                         char *cl_addr = strstr(line_buf, "Content-Length: ");
                         if (cl_addr)
                         {
@@ -406,11 +418,11 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         }
                     }
 
-                    printf("\n\n###################################################################\n\n");
+                    printf("###################################################################\n\n");
 
                     printf("%.*s", offset, buf);
 
-                    printf("\n\n###################################################################\n\n");
+                    printf("###################################################################\n\n");
 
                     // Recv (continue)
                     remain_to_read = content_length - (first_read - offset);
@@ -456,7 +468,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     if (strstr(uri, "Seg") && strstr(uri, "Frag"))
                     {
                         // ENd timting
-                        end = clock;
+                        end = clock();
                         double stamp = (end - start) / CLOCKS_PER_SEC;
 
                         // Calculate time
