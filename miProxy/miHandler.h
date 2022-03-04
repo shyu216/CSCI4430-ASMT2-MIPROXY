@@ -1,35 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <time.h>
-
-#include "DNSHeader.h"
-#include "DNSQuestion.h"
-#include "DNSRecord.h"
-
-// #include "miHandler.h"
-#include "miCalculator.h"
-#include "miChooser.h"
-#include "miLogger.h"
-#include "miClient.h"
-#include "miServer.h"
-#include "miParser.h"
-
-#define MAXCLIENTS 30
-#define MAXSIZE 400000
+// HANDLE ALL THE THINGS
 
 int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 {
     // Initialize proxy socket
-    char server_port[MAXSIZE] = "80";
+    char server_port[MAXCLIENTNUM] = "80";
     int proxyfd2 = make_client(www_ip, server_port);
     int proxyfd = make_server(listen_port);
 
@@ -47,7 +21,11 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 
     // Initialize throughput
     double T_cur = 0.0;
-    douvle T_new = 0.0;
+    double T_new = 0.0;
+
+    // Initialize bitrate
+    int *br_list[HEADERLEN];
+    int br_index = 0;
 
     // Listen forever
     while (1)
@@ -58,7 +36,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
             perror("select error");
         }
 
-        for (int i = 0; i < MAXCLIENTS; ++i)
+        for (int i = 0; i < MAXCLIENTNUM; ++i)
         {
             if (FD_ISSET(i, &fds))
             {
@@ -85,7 +63,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                 // Handle old connections
                 else
                 {
-                    char buf[MAXSIZE];
+                    char buf[HEADERLEN];
                     int nbytes = read(i, buf, sizeof(buf));
 
                     if (nbytes == 0)
@@ -101,16 +79,16 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                     else
                     {
                         // Choose bit rate
-                        char *chunk = choose_bitrate(T_cur);
+                        int br = choose_bitrate(T_cur, br_list, br_index);
 
                         // Parse buf and generate request
-                        char *request = parse(buf, chunk);
+                        char *request = parse(buf, br);
 
                         // Send to server and recv
 
                         // Calculate time
                         T_cur = calculate(T_cur, T_new, alpha);
-                        
+
                         // Send to client
                     }
                 }

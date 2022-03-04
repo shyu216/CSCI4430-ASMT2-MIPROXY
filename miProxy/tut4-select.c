@@ -10,7 +10,7 @@
 #include <unistd.h> //close
 
 #define PORT 8888
-#define MAXCLIENTS 30
+#define MAXCLIENTNUM 30
 /*
  *  Compile with: gcc -o server echo_server.c
  *  Try to run this server and run multiple instances
@@ -68,7 +68,7 @@ int get_server_socket(struct sockaddr_in *address)
 int main(int argc, char *argv[])
 {
   int server_socket, addrlen, activity, valread;
-  int client_sockets[MAXCLIENTS] = {0};
+  int client_sockets[MAXCLIENTNUM] = {0};
 
   int client_sock;
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     // add master socket to set
     FD_SET(server_socket, &readfds);
-    for (int i = 0; i < MAXCLIENTS; i++)
+    for (int i = 0; i < MAXCLIENTNUM; i++)
     {
       client_sock = client_sockets[i];
       if (client_sock != 0)
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
       }
       printf("Welcome message sent successfully\n");
       // add new socket to the array of sockets
-      for (int i = 0; i < MAXCLIENTS; i++)
+      for (int i = 0; i < MAXCLIENTNUM; i++)
       {
         // if position is empty
         if (client_sockets[i] == 0)
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
       }
     }
     // else it's some IO operation on a client socket
-    for (int i = 0; i < MAXCLIENTS; i++)
+    for (int i = 0; i < MAXCLIENTNUM; i++)
     {
       client_sock = client_sockets[i];
       // Note: sd == 0 is our default here by fd 0 is actually stdin

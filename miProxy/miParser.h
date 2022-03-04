@@ -1,86 +1,52 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <time.h>
+// PARSE AND GENERATE REQUEST OF VIDEO
 
-// #include "DNSHeader.h"
-// #include "DNSQuestion.h"
-// #include "DNSRecord.h"
-
-// #include "miHandler.h"
-// #include "miCalculator.h"
-// #include "miChooser.h"
-// #include "miLogger.h"
-// #include "miClient.h"
-// #include "miServer.h"
-// #include "miParser.h"
-
-#define MAXCLIENTS 30
-#define MAXSIZE 400000
-
-char *parse(char *buf, char *chunk)
+char *parse(char *buf, int br)
 {
-    // Initialize parameters
-    char request[MAXSIZE];
-    strcpy(request, buf);
+    // Generate request
+    char request[HEADERLEN];
+    memset(request, 0, HEADERLEN * sizeof(char));
 
-    char line_buf[MAXSIZE];
+    // Get method uri version, e.g. "GET /index.html HTTP/1.1"
+    char line_buf[HEADERLEN];
+    memset(line_buf, 0, HEADERLEN * sizeof(char));
     int offset = 0;
 
-    char tail[MAXSIZE];
-    memset(tail, 0, MAXSIZE * sizeof(char));
-
-    int nbytes;
-
     // method uri version
-    char method[MAXSIZE];
-    char uri[MAXSIZE];
-    char version[MAXSIZE];
-    memset(method, 0, MAXSIZE * sizeof(char));
-    memset(uri, 0, MAXSIZE * sizeof(char));
-    memset(version, 0, MAXSIZE * sizeof(char));
+    char method[HEADERLEN];
+    char uri[HEADERLEN];
+    char version[HEADERLEN];
+    memset(method, 0, HEADERLEN * sizeof(char));
+    memset(uri, 0, HEADERLEN * sizeof(char));
+    memset(version, 0, HEADERLEN * sizeof(char));
 
-    // Parse request
-    do
+    char path[HEADERLEN];
+    cahr chunk[HEADERLEN];
+
+    int nbytes = readline(buf, line_buf, sizeof(buf), offset);
+    sscanf(line_buf, "%s %s %s", method, uri, version);
+
+    // Check uri
+    if (!strstr(uri, "Seg") || !strstr(uri, "Frag"))
     {
-        // CLear line buffer
-        memset(line_buf, 0, MAXSIZE * sizeof(char));
+        memcpy(request, buf);
+    }
+    else
+    {
+        sscanf(uri, "%[^0-9]%*d%s", path, chunk);
+        sprintf(line_buf, "%s%d%s", path, br, chunk);
+        sprintf(request, "%s %s %s\r\n", method, line_buf, version);
 
-        // Read a line
-        nbytes = readline(buf, line_buf, sizeof(buf), offset);
-
-        // Get method uri version, e.g. "GET /index.html HTTP/1.1"
-        if (offset == 0)
+        // Store Remaining buf
+        while (nbytes)
         {
-            sscanf(line_buf, "%s %s %s", method, uri, version);
+            memset(line_buf, 0, HEADERLEN * sizeof(char));
+            nbytes = readline(buf, line_buf, sizeof(buf), offset);
+            strcat(request, line_buf);
+
+            // Add 1 for "\n"
+            offset += nbytes + 1;
         }
-        // Store the tail
-        else
-        {
-            strcat(remaining_request, line_buf);
-        }
+    }
 
-        // Update offset
-        offset += nbytes + 1;
-
-        // IS video chunk
-        char *new_chunk;
-
-        clock_t start_time;
-        clock_t end_time;
-
-        // Read and Get time
-        start_time = clock();
-
-
-        // 先写到这里
-    } while (nbytes);
+    return request;
 }

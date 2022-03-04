@@ -1,27 +1,34 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <time.h>
+// CHOOSE A BITRATE
 
-// #include "DNSHeader.h"
-// #include "DNSQuestion.h"
-// #include "DNSRecord.h"
+void sort_bitrate(int *list, int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        for (int j = 0; j < len - 1 - i; ++j)
+        {
+            if (list[j - 1] > list[j])
+            {
+                int temp = list[j];
+                list[j] = list[j - 1];
+                list[j - 1] = temp;
+            }
+        }
+    }
+}
 
-// #include "miHandler.h"
-// #include "miCalculator.h"
-// #include "miChooser.h"
-// #include "miLogger.h"
-// #include "miClient.h"
-// #include "miServer.h"
-// #include "miParser.h"
+int choose_bitrate(double T_cur, int *list, int len)
+{
+    sort_bitrate(list, len);
 
-#define MAXCLIENTS 30
-#define MAXSIZE 400000
+    int i = 0;
+    for (; i < len; ++i)
+    {
+        if (T_cur < 1.5 * list[i])
+        {
+            break;
+        }
+    }
+    i = i == len ? 0 : i;
+
+    return list[i];
+}
