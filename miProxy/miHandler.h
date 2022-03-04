@@ -16,16 +16,26 @@ int readline(char *src, char *dst, int maxlen, int offset)
     return n;
 }
 
-int handler(int listen_port, char *www_ip, double alpha, char *log_file)
+int handler(int listen_port, char *www_ip, double alpha, char *filename)
 {
+    // Open file
+    File *logFile;
+    logFile = fopen(filename, "w+");
+    if (logFile == NULL)
+    {
+        perror("Error creating/opening file");
+        exit(0);
+    }
+
     // Initialize proxy socket
     int proxyfd2 = make_client(www_ip, 80);
     int proxyfd = make_server(listen_port);
 
     // Initialize client socket
-    struct sockaddr_in addr;
+    struct sockaddr_in addr[MAXCLIENTNUM];
     int addrlen = sizeof(addr);
-    int clientfd;
+    int clientfd[MAXCLIENTNUM];
+    int clientnum = 0;
 
     // Initialize socket descriptors
     fd_set fds;
@@ -60,20 +70,21 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                 if (i == proxyfd)
                 {
                     // Accept
-                    clientfd = accept(proxyfd, (struct sockaddr *)&addr, (socklen_t *)&addrlen);
-                    if (clientfd == -1)
+                    clientfd[clientnum] = accept(proxyfd, (struct sockaddr *)&addr[clientnum], (socklen_t *)&addrlen[clientnum]);
+                    if (clientfd[clientnum] == -1)
                     {
                         perror("accept error");
                     }
                     else
                     {
                         // Add client to set
-                        FD_SET(clientfd, &fds);
+                        FD_SET(clientfd[clientnum], &fds);
 
                         // Somebody connected, get their details and print
                         printf("\n---New client connection---\n");
-                        printf("socket fd is %d , ip is : %s , port : %d \n", clientfd, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+                        printf("socket fd is %d , ip is : %s , port : %d \n", clientfd[clientnum], inet_ntoa(addr[clientnum].sin_addr), ntohs(addr[clientnum].sin_port));
                     }
+                    ++clientnum;
                 }
                 // Handle old connections
                 else
@@ -97,10 +108,6 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 
                     if (nbytes == -1)
                     {
-                        // Somebody disconnected, get their details and print
-                        printf("\n---Client disconnected---\n");
-                        printf("socket ip is : %s , port : %d \n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
-
                         // Close the socket and Clear fd
                         close(i);
                         FD_CLR(i, &fds);
@@ -126,41 +133,44 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 
                         char path[HEADERLEN];
                         char chunk[HEADERLEN];
+                        memset(path, 0, HEADERLEN * sizeof(char));
+                        memset(chunk, 0, HEADERLEN * sizeof(char));
 
                         int nbytes = readline(buf, line_buf, sizeof(buf), offset);
                         sscanf(line_buf, "%s %s %s", method, uri, version);
 
+                        // Store Remaining buf
+                        char tail[HEADERLEN];
+                        memset(tail, 0, HEADERLEN * sizeof(char));
+                        while (nbytes)
+                        {
+                            memset(line_buf, 0, HEADERLEN * sizeof(char));
+                            nbytes = readline(buf, line_buf, sizeof(buf), offset);
+                            strcat(tail, line_buf);
+
+                            // Add 1 for "\n"
+                            offset += nbytes + 1;
+                        }
+
                         // IS video chunk
+                        int br = 0;
                         if (strstr(uri, "Seg") && strstr(uri, "Frag"))
                         {
                             // Choose bit rate
-                            sort_bitrate(br_list, br_len);
-                            int br = choose_bitrate(T_cur, br_list, br_len);
+                            br = choose_bitrate(T_cur, br_list, br_len);
 
                             // Revise bitrate
                             sscanf(uri, "%[^0-9]%*d%s", path, chunk);
                             sprintf(line_buf, "%s%d%s", path, br, chunk);
                             sprintf(request, "%s %s %s\r\n", method, line_buf, version);
-
-                            // Store Remaining buf
-                            while (nbytes)
-                            {
-                                memset(line_buf, 0, HEADERLEN * sizeof(char));
-                                nbytes = readline(buf, line_buf, sizeof(buf), offset);
-                                strcat(request, line_buf);
-
-                                // Add 1 for "\n"
-                                offset += nbytes + 1;
-                            }
+                            strcat(request, tail);
                         }
                         else
                         {
                             strcpy(request, buf);
-
-                            // IS video meta
                         }
 
-                        // Send to server and recv
+                        // Send to server
                         nbytes = send(proxyfd2, request, HEADERLEN * sizeof(char), 0);
                         if (nbytes == -1)
                         {
@@ -168,14 +178,14 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                             exit(0);
                         }
 
-                        // Initialize buf and line buf
+                        // Clean buf
                         memset(buf, 0, CONTENTLEN * sizeof(buf));
 
                         // Start timing
                         clock_t start, end;
                         start = clock();
 
-                        // Recv first chunk, probably the header
+                        // Recv first chunk
                         nbytes = recv(proxyfd2, buf, sizeof(buf), 0);
                         if (nbytes == -1)
                         {
@@ -195,9 +205,10 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                             memset(line_buf, 0, HEADERLEN * sizeof(char));
                             nbytes = readline(buf, line_buf, sizeof(line_buf), offset);
 
-                            if (strstr(line_buf, "Content-Length: "))
+                            char *cl_addr = strstr(line_buf, "Content-Length: ");
+                            if (cl_addr)
                             {
-                                sscanf(line_buf, "Content-Length: %d", &content_length);
+                                sscanf(cl_addr, "Content-Length: %d", &content_length);
                             }
 
                             offset += nbytes + 1;
@@ -208,7 +219,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                             }
                         }
 
-                        // Keep reading
+                        // Recv (continue)
                         remain_read = content_length - (first_read - offset);
                         char *buf_ptr = buf + first_read;
                         while (remain_read)
@@ -223,8 +234,33 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                             buf_ptr += nbytes;
                         }
 
+                        // IS Video meta
+                        if (strstr(uri, ".f4m"))
+                        {
+                            // Get bitrate
+                            offset = 0;
+                            while (!strstr(line_buf, "</manifest>"))
+                            {
+                                memset(line_buf, 0, HEADERLEN * sizeof(char));
+                                nbytes = readline(buf, line_buf, sizeof(line_buf), offset);
+
+                                offset += nbytes + 1;
+
+                                // Find bitrate address
+                                char *br_addr = strstr(line_buf, "bitrate");
+                                if (br_addr)
+                                {
+                                    sscanf(br_addr, "bitrate=\"%d\"", &br_list[br_len]);
+                                    ++br_len;
+                                }
+                            }
+
+                            // Sort bitrate
+                            sort_bitrate(br_list, br_len);
+                        }
+
                         // IS Video chunk
-                        if (strstr(buf, "Seg") && strstr(buf, "Frag"))
+                        if (strstr(uri, "Seg") && strstr(uri, "Frag"))
                         {
                             // ENd timting
                             end = clock;
@@ -233,12 +269,26 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                             // Calculate time
                             T_new = content_length / (stamp * 1000);
                             T_cur = alpha * T_new + (1 - alpha) * T_cur;
+
+                            // Get client ip
+                            int j = 0;
+                            for (; j < clientnum; ++j)
+                            {
+                                if (clientfd[j] == i)
+                                {
+                                    break;
+                                }
+                            }
+
+                            fprintf(logFile, "%s %s %s %lf %lf %lf %d\n", inet_ntoa(addr[j].sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
                         }
 
-                        // IS Video meta
-                        if (strstr(buf, ".f4m"))
+                        // Send to browser
+                        nbytes = send(i, buf, sizeof(buf), 0);
+                        if (nbytes == -1)
                         {
-                            offset = 0;
+                            // perror("Error streaming video");
+                            exit(0);
                         }
                     }
                 }

@@ -15,11 +15,9 @@
 #define HEADERLEN 102400
 #define CONTENTLEN 400000
 
-#include "miHelper.h"
 #include "miChooser.h"
 #include "miClient.h"
 #include "miServer.h"
-#include "miParser.h"
 #include "miHandler.h"
 
 int main(int argc, char *argv[])
