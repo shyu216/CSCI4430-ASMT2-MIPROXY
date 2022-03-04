@@ -25,8 +25,7 @@ https://github.com/mgild/Networkp2.git
 https://github.com/heaventourist/Video-Streaming-via-CDN.git
 
 ### firefox header
-```
-Message 
+``` 
 GET /index.html HTTP/1.1
 Host: 127.0.0.1:8888
 User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0
@@ -72,4 +71,89 @@ Server
 Apache/2.2.32 (Unix)
 ```
 
+### server response index.html
+```
+HTTP/1.1 200 OK
+Date: Mon, 01 Jan 2018 00:35:17 GMT
+Server: Apache/2.2.32 (Unix)
+Last-Modified: Mon, 01 Jan 2018 00:35:17 GMT
+ETag: W/"49618-764-5afdaed4c2c8b"
+Accept-Ranges: bytes
+Content-Length: 1892
+Keep-Alive: timeout=30000, max=500000
+Connection: Keep-Alive
+Content-Type: text/html
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Strobe Media Playback</title>
+    <script type="text/javascript" src="swfobject.js"></script>
+	<script type="text/javascript">  		
+        var loc = window.location.host
+
+    	// Create a StrobeMediaPlayback configuration
+		var parameters =
+			{	src: "http://"+loc+"/vod/big_buck_bunny.f4m"
+   			,	autoPlay: true
+			,	controlBarAutoHide: false
+			,   javascriptCallbackFunction: "onJavaScriptBridgeCreated"
+			};
+    		
+		// Embed the player SWF:
+		swfobject.embedSWF
+			( "StrobeMediaPlayback.swf"
+			, "strobeMediaPlayback"
+			, 1280
+			, 720
+			, "10.1.0"
+			, {}
+			, parameters
+			, { allowFullScreen: "true"}
+			, { name: "strobeMediaPlayback" }
+			);
+
+			
+		function onCurrentTimeChange(time, playerId)
+		{
+			document.getElementById("currentTime").innerHTML = time;
+		}
+		
+		function onDurationChange(time, playerId)
+		{
+			document.getElementById("duration").innerHTML = time;
+		}
+		var player = null;
+		function onJavaScriptBridgeCreated(playerId)
+		{
+			if (player == null) {
+				player = document.getElementById(playerId);
+				
+				// Add event listeners that will update the
+				player.addEventListener("currentTimeChange", "onCurrentTimeChange");
+				player.addEventListener("durationChange", "onDurationChange");
+				
+				// Pause/Resume the playback when we click the Play/Pause link
+				document.getElementById("play-pause").onclick = function(){
+					var state = player.getState();
+					if (state == "ready" || state == "paused") {
+						player.play2();
+					}
+					else
+						if (state == "playing") {
+							player.pause();
+						}
+					return false;
+				};
+			}
+		}
+    </script>  	
+  </head>
+  <body>
+	<div id="strobeMediaPlayback">
+      <p>Alternative content</p>
+    </div>
+  </body>
+</html>
+```
 

@@ -21,7 +21,7 @@ int make_client(const char *hostname, int port)
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1)
     {
-        // perror("Error opening stream socket");
+        perror("Error opening stream socket");
         exit(0);
     }
 
@@ -35,7 +35,7 @@ int make_client(const char *hostname, int port)
     // (3) Connect to remote server
     if (connect(sockfd, (sockaddr *)&addr, sizeof(addr)) == -1)
     {
-        // perror("Error connecting stream socket");
+        perror("Error connecting stream socket");
         exit(0);
     }
 

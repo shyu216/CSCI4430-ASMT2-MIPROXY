@@ -1,6 +1,6 @@
 // PARSE AND GENERATE REQUEST OF VIDEO
 
-void parse(char *buf, char *request, int br)
+void get_request(char *buf, char *request, int br)
 {
     char line_buf[HEADERLEN];
     memset(line_buf, 0, HEADERLEN * sizeof(char));

@@ -13,6 +13,7 @@
 
 #define MAXCLIENTNUM 800
 #define HEADERLEN 102400
+#define CONTENTLEN 400000
 
 #include "miHelper.h"
 #include "miChooser.h"
@@ -21,7 +22,6 @@
 #include "miServer.h"
 #include "miParser.h"
 #include "miCalculator.h"
-
 #include "miHandler.h"
 
 int main(int argc, char *argv[])

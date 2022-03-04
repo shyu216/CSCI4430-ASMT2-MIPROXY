@@ -15,7 +15,7 @@ int make_server(int port)
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1)
     {
-        // perror("Error opening stream socket");
+        perror("Error opening stream socket");
         exit(0);
     }
 
@@ -23,7 +23,7 @@ int make_server(int port)
     int yesval = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yesval, sizeof(yesval)) == -1)
     {
-        // perror("Error setting socket options");
+        perror("Error setting socket options");
         exit(0);
     }
 
@@ -37,14 +37,14 @@ int make_server(int port)
     // (3b) Bind to the port
     if (bind(sockfd, (sockaddr *)&addr, sizeof(addr)) == -1)
     {
-        // perror("Error binding stream socket");
+        perror("Error binding stream socket");
         exit(0);
     }
 
     // (4) Begin listening for incoming connections
     if (listen(sockfd, MAXCLIENTNUM) == -1)
     {
-        // perror("Error listening connection");
+        perror("Error listening connection");
         exit(0);
     }
 
