@@ -4,7 +4,7 @@ int make_client_sockaddr(struct sockaddr_in *addr, const char *hostname, int por
 {
     addr->sin_family = AF_INET;
     struct hostent *host = gethostbyname(hostname);
-    if (host == nullptr)
+    if (host == NULL)
     {
         // fprintf(stderr, "%s: unknown host\n", hostname);
         exit(0);

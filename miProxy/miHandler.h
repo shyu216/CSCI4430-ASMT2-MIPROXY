@@ -3,8 +3,7 @@
 int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 {
     // Initialize proxy socket
-    char server_port[MAXCLIENTNUM] = "80";
-    int proxyfd2 = make_client(www_ip, server_port);
+    int proxyfd2 = make_client(www_ip, 80);
     int proxyfd = make_server(listen_port);
 
     // Initialize client socket
@@ -24,7 +23,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
     double T_new = 0.0;
 
     // Initialize bitrate
-    int *br_list[HEADERLEN];
+    int br_list[HEADERLEN];
     int br_index = 0;
 
     // Listen forever
@@ -64,7 +63,8 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                 else
                 {
                     char buf[HEADERLEN];
-                    int nbytes = read(i, buf, sizeof(buf));
+                    memset(buf, 0, HEADERLEN * sizeof(char));
+                    ssize_t nbytes = recv(i, buf, sizeof(buf), 0);
 
                     if (nbytes == 0)
                     {
@@ -82,7 +82,9 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                         int br = choose_bitrate(T_cur, br_list, br_index);
 
                         // Parse buf and generate request
-                        char *request = parse(buf, br);
+                        char request[HEADERLEN];
+                        memset(request, 0, HEADERLEN * sizeof(char));
+                        parse(buf, request, br);
 
                         // Send to server and recv
 

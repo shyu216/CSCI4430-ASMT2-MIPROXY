@@ -11,16 +11,16 @@
 
 CXX = gcc
 # TODO For C++ only.
-# CXXFLAGS = -std=c++14 -Wconversion -Wall -Werror -Wextra -pedantic 
+CXXFLAGS = -std=c++14 -Wconversion -Wall -Werror -Wextra -pedantic 
 # CXXFLAGS = -g -std=c++11 -pedantic
 
 all: miProxy
 
 # TODO Modify source file name for your project.
 # For C only.
-SOURCES = miProxy.c 
+# SOURCES = miProxy.c 
 # For C++ only.
-# SOURCES = miProxy.cpp
+SOURCES = miProxy.cpp
 
 miProxy: $(SOURCES)
 	$(CXX) $(CXXFLAGS) $(SOURCES) -o miProxy

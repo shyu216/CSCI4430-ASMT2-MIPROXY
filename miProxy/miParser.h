@@ -1,17 +1,12 @@
 // PARSE AND GENERATE REQUEST OF VIDEO
 
-char *parse(char *buf, int br)
+void parse(char *buf, char *request, int br)
 {
-    // Generate request
-    char request[HEADERLEN];
-    memset(request, 0, HEADERLEN * sizeof(char));
-
-    // Get method uri version, e.g. "GET /index.html HTTP/1.1"
     char line_buf[HEADERLEN];
     memset(line_buf, 0, HEADERLEN * sizeof(char));
     int offset = 0;
 
-    // method uri version
+    // Get method uri version, e.g. "GET /index.html HTTP/1.1"
     char method[HEADERLEN];
     char uri[HEADERLEN];
     char version[HEADERLEN];
@@ -20,7 +15,7 @@ char *parse(char *buf, int br)
     memset(version, 0, HEADERLEN * sizeof(char));
 
     char path[HEADERLEN];
-    cahr chunk[HEADERLEN];
+    char chunk[HEADERLEN];
 
     int nbytes = readline(buf, line_buf, sizeof(buf), offset);
     sscanf(line_buf, "%s %s %s", method, uri, version);
@@ -28,7 +23,7 @@ char *parse(char *buf, int br)
     // Check uri
     if (!strstr(uri, "Seg") || !strstr(uri, "Frag"))
     {
-        memcpy(request, buf);
+        strcpy(request, buf);
     }
     else
     {
@@ -47,6 +42,4 @@ char *parse(char *buf, int br)
             offset += nbytes + 1;
         }
     }
-
-    return request;
 }
