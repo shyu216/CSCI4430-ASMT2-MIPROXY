@@ -4,13 +4,13 @@ void sort_bitrate(int *list, int len)
 {
     for (int i = 0; i < len; i++)
     {
-        for (int j = 0; j < len - 1 - i; ++j)
+        for (int j = i + 1; j < len; ++j)
         {
-            if (list[j - 1] > list[j])
+            if (list[i] > list[j])
             {
                 int temp = list[j];
-                list[j] = list[j - 1];
-                list[j - 1] = temp;
+                list[j] = list[i];
+                list[i] = temp;
             }
         }
     }
@@ -18,8 +18,6 @@ void sort_bitrate(int *list, int len)
 
 int choose_bitrate(double T_cur, int *list, int len)
 {
-    sort_bitrate(list, len);
-
     int i = 0;
     for (; i < len; ++i)
     {
@@ -28,7 +26,8 @@ int choose_bitrate(double T_cur, int *list, int len)
             break;
         }
     }
-    i = i == len ? 0 : i;
+    --i;
+    i = i < 0 ? 0 : i;
 
     return list[i];
 }

@@ -17,11 +17,9 @@
 
 #include "miHelper.h"
 #include "miChooser.h"
-#include "miLogger.h"
 #include "miClient.h"
 #include "miServer.h"
 #include "miParser.h"
-#include "miCalculator.h"
 #include "miHandler.h"
 
 int main(int argc, char *argv[])

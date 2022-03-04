@@ -1,5 +1,21 @@
 // HANDLE ALL THE THINGS
 
+int readline(char *src, char *dst, int maxlen, int offset)
+{
+    int n;
+    char *temp = src + offset;
+
+    for (n = 0; n < maxlen; n++)
+    {
+        dst[n] = temp[n];
+        if (temp[n] == '\n' || temp[n] == '\0')
+        {
+            break;
+        }
+    }
+    return n;
+}
+
 int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 {
     // Initialize proxy socket
@@ -24,7 +40,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
 
     // Initialize bitrate
     int br_list[HEADERLEN]; // THE SAME AS int *br_list=(int*)malloc(sizeof(int)*HEADERLEN);
-    int br_index = 0;
+    int br_len = 0;
 
     // Listen forever
     while (1)
@@ -65,7 +81,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                     char buf[CONTENTLEN];
                     char line_buf[HEADERLEN];
 
-                    memset(buf, 0, HEADERLEN * sizeof(char));
+                    memset(buf, 0, CONTENTLEN * sizeof(char));
                     ssize_t nbytes;
 
                     printf("\n\n###################################################################\n\n");
@@ -91,13 +107,58 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                     }
                     else
                     {
-                        // Choose bit rate
-                        int br = choose_bitrate(T_cur, br_list, br_index);
-
                         // Parse buf and generate request
                         char request[HEADERLEN];
                         memset(request, 0, HEADERLEN * sizeof(char));
-                        get_request(buf, request, br);
+
+                        // Get request from client
+                        char line_buf[HEADERLEN];
+                        memset(line_buf, 0, HEADERLEN * sizeof(char));
+                        int offset = 0;
+
+                        // Get method uri version, e.g. "GET /index.html HTTP/1.1"
+                        char method[HEADERLEN];
+                        char uri[HEADERLEN];
+                        char version[HEADERLEN];
+                        memset(method, 0, HEADERLEN * sizeof(char));
+                        memset(uri, 0, HEADERLEN * sizeof(char));
+                        memset(version, 0, HEADERLEN * sizeof(char));
+
+                        char path[HEADERLEN];
+                        char chunk[HEADERLEN];
+
+                        int nbytes = readline(buf, line_buf, sizeof(buf), offset);
+                        sscanf(line_buf, "%s %s %s", method, uri, version);
+
+                        // IS video chunk
+                        if (strstr(uri, "Seg") && strstr(uri, "Frag"))
+                        {
+                            // Choose bit rate
+                            sort_bitrate(br_list, br_len);
+                            int br = choose_bitrate(T_cur, br_list, br_len);
+
+                            // Revise bitrate
+                            sscanf(uri, "%[^0-9]%*d%s", path, chunk);
+                            sprintf(line_buf, "%s%d%s", path, br, chunk);
+                            sprintf(request, "%s %s %s\r\n", method, line_buf, version);
+
+                            // Store Remaining buf
+                            while (nbytes)
+                            {
+                                memset(line_buf, 0, HEADERLEN * sizeof(char));
+                                nbytes = readline(buf, line_buf, sizeof(buf), offset);
+                                strcat(request, line_buf);
+
+                                // Add 1 for "\n"
+                                offset += nbytes + 1;
+                            }
+                        }
+                        else
+                        {
+                            strcpy(request, buf);
+
+                            // IS video meta
+                        }
 
                         // Send to server and recv
                         nbytes = send(proxyfd2, request, HEADERLEN * sizeof(char), 0);
@@ -131,7 +192,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                         int offset = 0;
                         while (nbytes)
                         {
-                            memset(line_buf, 0, CONTENTLEN * sizeof(char));
+                            memset(line_buf, 0, HEADERLEN * sizeof(char));
                             nbytes = readline(buf, line_buf, sizeof(line_buf), offset);
 
                             if (strstr(line_buf, "Content-Length: "))
@@ -152,7 +213,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                         char *buf_ptr = buf + first_read;
                         while (remain_read)
                         {
-                            nbytes = recv(proxyfd2, buf_ptr, sizeof(buf), 0);
+                            nbytes = recv(proxyfd2, buf_ptr, remain_read * sizeof(char), 0);
                             if (nbytes == -1)
                             {
                                 // perror("Error streaming video");
@@ -162,7 +223,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                             buf_ptr += nbytes;
                         }
 
-                        // IS Video
+                        // IS Video chunk
                         if (strstr(buf, "Seg") && strstr(buf, "Frag"))
                         {
                             // ENd timting
@@ -170,8 +231,14 @@ int handler(int listen_port, char *www_ip, double alpha, char *log_file)
                             double stamp = (end - start) / CLOCKS_PER_SEC;
 
                             // Calculate time
-                            *T_new = content_length / (stamp * 1000);
-                            calculate(T_cur, *T_new, alpha);
+                            T_new = content_length / (stamp * 1000);
+                            T_cur = alpha * T_new + (1 - alpha) * T_cur;
+                        }
+
+                        // IS Video meta
+                        if (strstr(buf, ".f4m"))
+                        {
+                            offset = 0;
                         }
                     }
                 }
