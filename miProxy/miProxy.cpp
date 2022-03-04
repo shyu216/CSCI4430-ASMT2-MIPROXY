@@ -294,9 +294,11 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     printf("###################################################################\n\n");
 
                     nbytes = (ssize_t)recv(i, buf, sizeof(buf), 0);
-                    printf("%s", buf);
+                    printf("%.*s", nbytes, buf);
 
                     printf("###################################################################\n\n");
+                    printf("nbytes: %d\n", nbytes);
+
                     // nbytes = send(proxyfd2, buf, sizeof(buf), 0);
                     // nbytes = recv(proxyfd2, buf, sizeof(buf), 0);
                     // nbytes = send(i, buf, sizeof(buf), 0);
@@ -313,6 +315,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     // Parse content type
                     nbytes = readline(buf, line_buf, sizeof(buf), offset);
                     sscanf(line_buf, "%s %s %s", method, uri, version);
+                    printf("method: %s, uri: %s, version: %s\n", method, uri, version);
 
                     // Read the tail
                     while (nbytes)
@@ -342,8 +345,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     {
                         strcpy(request, buf);
                     }
-                    !!! 注意一下这些尾巴，不齐就有错误。
-                    // strcpy(request, "\r\n");
+                    // !!! buf 不对就没法receive
 
                     /*
                     (2) Send revised request
@@ -369,6 +371,11 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     printf("Clean buf...");
                     memset(buf, 0, CONTENTLEN * sizeof(char));
                     printf("Done\n");
+
+// Make sure server will reply
+                    strcpy(buf, "\r\n\r\n");
+                    nbytes = (ssize_t)send(proxyfd2, request, sizeof(request), 0);
+                    memset(buf, 0, CONTENTLEN * sizeof(char));
 
                     /*
                     (3) Recv response
@@ -403,16 +410,16 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         memset(line_buf, 0, HEADERLEN * sizeof(char));
                         nbytes = readline(buf, line_buf, sizeof(line_buf), offset);
 
-                        printf("%s\n", line_buf);
                         char *cl_addr = strstr(line_buf, "Content-Length: ");
                         if (cl_addr)
                         {
                             sscanf(cl_addr, "Content-Length: %d", &content_length);
+                            printf("Content-Length: %d\n", content_length);
                         }
 
                         offset += nbytes + 1;
 
-                        if (strcmp(line_buf, "\r\n\r\n") == 0)
+                        if (strcmp(line_buf, "\r\n") == 0)
                         {
                             break;
                         }
@@ -521,7 +528,7 @@ int main(int argc, char *argv[])
     {
         // bonus part here.
         printf("We dont have bonus part.\n");
-        printf("if you get the ip, you can return handler(listen_port, www_ip, alpha, log_file);");
+        printf("if you get the ip, you can return handler(listen_port, www_ip, alpha, log_file);\n");
         return 1;
     }
     else

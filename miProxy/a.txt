@@ -2,12 +2,10 @@ Successfully make client, socket: 4
 Successfully make server, socket: 5
 
 ---New client connection---
-socket fd is 6 , ip is : 127.0.0.1 , port : 57028 
-
-
+socket fd is 6 , ip is : 127.0.0.1 , port : 57266 
 ###################################################################
 
-GET / HTTP/1.1
+GET /index.html HTTP/1.1
 Host: 127.0.0.1:8888
 User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
@@ -15,16 +13,18 @@ Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
-
-
-
-###################################################################
-
-
+If-Modified-Since: Mon, 01 Jan 2018 00:06:00 GMT
+If-None-Match: W/"49618-764-5afdaed4c2c8b"
+Cache-Control: max-age=0
 
 ###################################################################
 
-GET / HTTP/1.1
+nbytes: 452
+method: GET, uri: /index.html, version: HTTP/1.1
+Send...nbytes is 1024, Done
+###################################################################
+
+GET /index.html HTTP/1.1
 Host: 127.0.0.1:8888
 User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
@@ -32,7 +32,31 @@ Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
+If-Modified-Since: Mon, 01 Jan 2018 00:06:00 GMT
+If-None-Match: W/"49618-764-5afdaed4c2c8b"
+Cache-Control: max-age=0
 
+###################################################################
 
+Clean buf...Done
+Start timing...start time: 4347, Done
+Recv first chunk...Done
+Parse content length
+Content-Length: 1892
+###################################################################
 
-#############
+HTTP/1.1 200 OK
+Date: Mon, 01 Jan 2018 00:09:23 GMT
+Server: Apache/2.2.32 (Unix)
+Last-Modified: Mon, 01 Jan 2018 00:09:23 GMT
+ETag: W/"49618-764-5afdaed4c2c8b"
+Accept-Ranges: bytes
+Content-Length: 1892
+Keep-Alive: timeout=30000, max=500000
+Connection: Keep-Alive
+Content-Type: text/html
+
+###################################################################
+
+###################################################################
+
