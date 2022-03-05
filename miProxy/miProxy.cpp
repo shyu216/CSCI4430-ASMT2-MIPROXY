@@ -68,7 +68,7 @@ int make_server(int port)
     }
 
     // (5) Return
-    printf("Successfully make server, socket: %d\n", sockfd);
+    // printf("Successfully make server, socket: %d\n", sockfd);
     return sockfd;
 }
 
@@ -114,7 +114,7 @@ int make_client(const char *hostname, int port)
     }
 
     // (4) Return
-    printf("Successfully make client, socket: %d\n", sockfd);
+    // printf("Successfully make client, socket: %d\n", sockfd);
     return sockfd;
 }
 
@@ -149,7 +149,7 @@ int choose_bitrate(double T_cur, int *list, int len)
     --i;
     i = i < 0 ? 0 : i;
 
-    printf("Bitrate %d is chosen\n", list[i]);
+    // printf("Bitrate %d is chosen\n", list[i]);
     return list[i];
 }
 
@@ -213,7 +213,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
     // Listen forever
     while (1)
     {
-        printf("Loop forever\n");
+        // printf("Loop forever\n");
 
         // Clear and Add socket to set
         FD_ZERO(&fds);
@@ -227,13 +227,9 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
         }
 
         // Select
-        if (select(FD_SETSIZE, &fds, NULL, NULL, NULL) == -1)
+        if (select(FD_SETSIZE, &fds, NULL, NULL, NULL) == -1 && errno != EINTR)
         {
             perror("select error");
-            if (errno == EINTR)
-            {
-                printf("No available socket, including the proxy_ser_fd...\n");
-            }
             continue;
         }
 
@@ -246,7 +242,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                 */
                 if (i == proxy_ser_fd)
                 {
-                    printf("Waiting connection\n");
+                    // printf("Waiting connection\n");
 
                     // Accept
                     clientfd = accept(proxy_ser_fd, (struct sockaddr *)&addr, (socklen_t *)&addrlen);
@@ -268,8 +264,8 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         }
 
                         // Print info
-                        printf("\n---New client connection---\n");
-                        printf("socket fd is %d , ip is : %s , port : %d \n", clientfd, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+                        // printf("\n---New client connection---\n");
+                        // printf("socket fd is %d , ip is : %s , port : %d \n", clientfd, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
                     }
                 }
 
@@ -278,7 +274,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                 */
                 else
                 {
-                    printf("\nStart to handle a request..., socket is %d\n", i);
+                    // printf("\nStart to handle a request..., socket is %d\n", i);
 
                     proxy_cli_fd = make_client(www_ip, 80);
 
@@ -318,19 +314,19 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     (1) Recv the request
                     */
 
-                    nbytes = (ssize_t)recv(i, buf, sizeof(buf), 0);
+                    nbytes = (int)recv(i, buf, sizeof(buf), 0);
 
-                    printf("Recv the request, nbytes: %d\n", nbytes);
-                    printf("###################################################################\n\n");
-                    printf("%.*s", nbytes, buf);
-                    printf("###################################################################\n\n");
+                    // printf("Recv the request, nbytes: %d\n", nbytes);
+                    // printf("###################################################################\n\n");
+                    // printf("%.*s", nbytes, buf);
+                    // printf("###################################################################\n\n");
 
                     // nbytes = send(proxy_cli_fd, buf, sizeof(buf), 0);
                     // nbytes = recv(proxy_cli_fd, buf, sizeof(buf), 0);
                     // nbytes = send(i, buf, sizeof(buf), 0);
-                    // printf("%s", buf);
+                    //// printf("%s", buf);
 
-                    if (nbytes == -1)
+                    if (nbytes < 1)
                     {
                         // Close the socket and Clear fd
                         perror("Error receiving request");
@@ -344,7 +340,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                             }
                         }
 
-                        printf("Socket %d removed\n", i);
+                        // printf("Socket %d removed\n", i);
 
                         // Close
                         close(proxy_cli_fd);
@@ -356,7 +352,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     offset += nbytes + 1; // Add 1 for "\n"
                     sscanf(line_buf, "%s %s %s\r\n", method, uri, version);
 
-                    printf("method: %s, uri: %s, version: %s\n", method, uri, version);
+                    // printf("method: %s, uri: %s, version: %s\n", method, uri, version);
 
                     // Read the tail
                     while (nbytes)
@@ -372,7 +368,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     nbytes = readline(buf, line_buf, sizeof(buf), offset);
                     strcat(tail, line_buf);
 
-                    printf("Finish read tail, result:\n%s\n", tail);
+                    // printf("Finish read tail, result:\n%s\n", tail);
 
                     // IS video chunk
                     if (strstr(uri, "Seg") && strstr(uri, "Frag"))
@@ -397,8 +393,8 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     */
 
                     // Send
-                    printf("Send...");
-                    nbytes = (ssize_t)send(proxy_cli_fd, request, sizeof(request), 0);
+                    // printf("Send...");
+                    nbytes = (int)send(proxy_cli_fd, request, sizeof(request), 0);
                     if (nbytes == -1)
                     {
                         perror("Error sending request message");
@@ -406,38 +402,38 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         break;
                     }
 
-                    printf(", Done, nbytes is %d\n", nbytes);
-                    printf("###################################################################\n\n");
-                    printf("%s", request);
-                    printf("###################################################################\n\n");
+                    // printf(", Done, nbytes is %d\n", nbytes);
+                    // printf("###################################################################\n\n");
+                    // printf("%s", request);
+                    //// printf("###################################################################\n\n");
 
                     // Clean buf
-                    printf("Clean buf...");
+                    // printf("Clean buf...");
                     memset(buf, 0, CONTENTLEN * sizeof(char));
-                    printf("Done\n");
+                    // printf("Done\n");
 
                     // Make sure server will reply // 为森么要这样子server才会回啊？？？
                     strcat(buf, "\r\n");
-                    nbytes = (ssize_t)send(proxy_cli_fd, buf, 2 * sizeof(char), 0);
+                    nbytes = (int)send(proxy_cli_fd, buf, 2 * sizeof(char), 0);
                     memset(buf, 0, CONTENTLEN * sizeof(char));
-                    printf("Send again..., nbytes is %d\n", nbytes);
-                    printf("###################################################################\n\n");
-                    printf("%s", buf);
-                    printf("###################################################################\n\n");
+                    // printf("Send only \\r\\n ..., nbytes is %d\n", nbytes);
+                    // printf("###################################################################\n\n");
+                    // printf("%s", buf);
+                    // printf("###################################################################\n\n");
 
                     /*
                     (3) Recv response
                     */
 
                     // Start timing
-                    printf("Start timing...");
+                    // printf("Start timing...");
                     clock_t start, end;
                     start = clock();
-                    printf("start time: %ld, Done\n", start);
+                    // printf("start time: %ld, Done\n", start);
 
                     // Recv first chunk
-                    printf("Recv first chunk...");
-                    nbytes = (ssize_t)recv(proxy_cli_fd, buf, HEADERLEN * sizeof(char), 0);
+                    // printf("Recv first chunk...");
+                    nbytes = (int)recv(proxy_cli_fd, buf, HEADERLEN * sizeof(char), 0);
                     if (nbytes == -1)
                     {
                         perror("Error receiving response");
@@ -445,10 +441,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         break;
                     }
 
-                    printf(", Done, nbytes is %d\n", nbytes);
-                    printf("###################################################################\n\n");
-                    printf("%s", buf);
-                    printf("###################################################################\n\n");
+                    // printf(", Done, nbytes is %d\n", nbytes);
 
                     // Content length parameters
                     int first_read = nbytes;
@@ -457,7 +450,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
 
                     // Parse content length
                     offset = 0;
-                    printf("Parse content length\n");
+                    // printf("Parse content length\n");
                     while (strcmp(line_buf, "\r\n"))
                     {
                         memset(line_buf, 0, HEADERLEN * sizeof(char));
@@ -472,21 +465,26 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         offset += nbytes + 1;
                     }
 
+                    // printf("###################################################################\n\n");
+                    // printf("%.*s", offset, buf);
+                    // printf("###################################################################\n\n");
+
                     // Recv (continue)
                     remain_to_read = content_length - (first_read - offset);
 
-                    printf("Header length: %d\n", offset);
-                    printf("Content-Length: %d\n", content_length);
-                    printf("Remain to read: %d\n", remain_to_read);
+                    // printf("Header length: %d\n", offset);
+                    // printf("Content-Length: %d\n", content_length);
+                    // printf("Remain to read: %d\n", remain_to_read);
 
                     char *buf_ptr = buf + first_read;
                     while (remain_to_read > 0)
                     {
-                        nbytes = (ssize_t)recv(proxy_cli_fd, buf_ptr, remain_to_read, 0);
+                        nbytes = (int)recv(proxy_cli_fd, buf_ptr, remain_to_read, 0);
                         if (nbytes == -1)
                         {
-                            perror("Error receiving content");
-                            exit(0);
+                            perror("Error receiving response");
+                            close(proxy_cli_fd);
+                            break;
                         }
                         remain_to_read -= nbytes;
                         buf_ptr += nbytes;
@@ -495,12 +493,12 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     // nbytes = readline(buf, line_buf, sizeof(buf), offset);
                     // strcat(tail, line_buf);
 
-                    printf("Remain to read: %d\n", remain_to_read);
+                    // printf("Remain to read: %d\n", remain_to_read);
 
                     // IS Video meta
                     if (strstr(uri, ".f4m"))
                     {
-                        printf("IS Video meta\n");
+                        // printf("IS Video meta\n");
 
                         // Get bitrate
                         offset = 0;
@@ -517,7 +515,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                             {
                                 sscanf(br_addr, "bitrate=\"%d\"", &br_list[br_len]);
 
-                                printf("Add bitrate: %d\n", br_list[br_len]);
+                                // printf("Add bitrate: %d\n", br_list[br_len]);
                                 ++br_len;
                             }
                         }
@@ -529,38 +527,42 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     // IS Video chunk
                     else if (strstr(uri, "Seg") && strstr(uri, "Frag"))
                     {
-                        printf("IS Video chunk\n");
+                        // printf("IS Video chunk\n");
 
                         // ENd timting
                         end = clock();
-                        double stamp = (end - start) / CLOCKS_PER_SEC;
+                        double stamp = (double)(end - start) / CLOCKS_PER_SEC;
 
                         // Calculate time
+
+                        // printf("End: %d", (int)end);
+                        // printf("Here, timestamp: %lf, T_new: %lf, T_cur: %lf\n", stamp, T_new, T_cur);
                         T_new = content_length / (stamp * 1000);
                         T_cur = alpha * T_new + (1 - alpha) * T_cur;
+                        // printf("Then, timestamp: %lf, T_new: %lf, T_cur: %lf\n", stamp, T_new, T_cur);
 
                         // Get client ip
                         getpeername(i, (struct sockaddr *)&addr, (socklen_t *)&addrlen);
 
-                        fprintf(logFile, "%s %s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
-                        printf("Generate log: %s %s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
+                        fprintf(logFile, "%s %d%s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), br, chunk, www_ip, stamp, T_new, T_cur, br);
+                        printf("Generate log: %s %d%s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), br, chunk, www_ip, stamp, T_new, T_cur, br);
                     }
 
                     else
                     {
-                        printf("IS something else\n");
-                        nbytes = (ssize_t)send(i, buf, sizeof(buf), 0);
-                        if (nbytes == -1)
-                        {
-                            perror("Error sending response (may be js)");
-                            break;
-                        }
-                        nbytes = (ssize_t)recv(proxy_cli_fd, buf, sizeof(buf), 0);
-                        if (nbytes == -1)
-                        {
-                            perror("Error recv response (may be js");
-                            break;
-                        }
+                        // printf("IS something else\n");
+                        // nbytes = (int)send(i, buf, sizeof(buf), 0);
+                        // if (nbytes == -1)
+                        // {
+                        //     perror("Error sending response (may be js)");
+                        //     break;
+                        // }
+                        // nbytes = (int)recv(proxy_cli_fd, buf, sizeof(buf), 0);
+                        // if (nbytes == -1)
+                        // {
+                        //     perror("Error recv response (may be js");
+                        //     break;
+                        // }
                     }
 
                     /*
@@ -568,25 +570,26 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     */
 
                     // Send
-                    nbytes = (ssize_t)send(i, buf, sizeof(buf), 0);
+                    nbytes = (int)send(i, buf, sizeof(buf), 0);
                     if (nbytes == -1)
                     {
                         perror("Error sending response");
-                        break;
+                        close(proxy_cli_fd);
+                        continue;
                     }
 
-                    printf("Send response, nbytes: %d\n", nbytes);
-                    printf("###################################################################\n\n");
-                    printf("%s", buf);
-                    printf("###################################################################\n\n");
-
-                    // Make sure client will reply
-                    // memset(buf, 0, CONTENTLEN * sizeof(char));
-                    // nbytes = (ssize_t)send(i, buf, 100*sizeof(char), 0);
-                    // printf("Send response again, nbytes: %d\n", nbytes);
+                    // printf("Send response, nbytes: %d\n", nbytes);
                     // printf("###################################################################\n\n");
                     // printf("%s", buf);
                     // printf("###################################################################\n\n");
+
+                    // Make sure client will reply
+                    // memset(buf, 0, CONTENTLEN * sizeof(char));
+                    // nbytes = (int)send(i, buf, 100*sizeof(char), 0);
+                    //// printf("Send response again, nbytes: %d\n", nbytes);
+                    //// printf("###################################################################\n\n");
+                    //// printf("%s", buf);
+                    //// printf("###################################################################\n\n");
 
                     // Close
                     close(proxy_cli_fd);
@@ -610,13 +613,13 @@ int main(int argc, char *argv[])
     else if (argc == 7 && strcmp(argv[1], "--dns") == 0)
     {
         // bonus part here.
-        printf("We dont have bonus part.\n");
-        printf("if you get the ip, you can return handler(listen_port, www_ip, alpha, log_file);\n");
+        // printf("We dont have bonus part.\n");
+        // printf("if you get the ip, you can return handler(listen_port, www_ip, alpha, log_file);\n");
         return 1;
     }
     else
     {
-        printf("Error: missing or extra arguments\n");
+        // printf("Error: missing or extra arguments\n");
         return 1;
     }
 }

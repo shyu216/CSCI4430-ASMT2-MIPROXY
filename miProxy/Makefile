@@ -11,8 +11,8 @@
 
 CXX = gcc
 # TODO For C++ only.
-# CXXFLAGS = -std=c++14 -Wconversion -Wall -Werror -Wextra -pedantic 
-CXXFLAGS = -g -std=c++11 -pedantic
+CXXFLAGS = -std=c++14 -Wconversion -Wall -Werror -Wextra -pedantic 
+# CXXFLAGS = -g -std=c++11 -pedantic
 
 all: miProxy
 
