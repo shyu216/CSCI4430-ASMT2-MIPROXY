@@ -193,10 +193,9 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
     int proxyfd = make_server(listen_port);
 
     // Initialize client socket
-    struct sockaddr_in addr[MAXCLIENTNUM];
+    struct sockaddr_in addr;
     int addrlen = sizeof(addr);
-    int clientfd[MAXCLIENTNUM];
-    int clientnum = 0;
+    int clientfd;
 
     // Initialize socket descriptors
     fd_set fds;
@@ -234,21 +233,20 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                 if (i == proxyfd)
                 {
                     // Accept
-                    clientfd[clientnum] = accept(proxyfd, (struct sockaddr *)&addr[clientnum], (socklen_t *)&addrlen);
-                    if (clientfd[clientnum] == -1)
+                    clientfd = accept(proxyfd, (struct sockaddr *)&addr, (socklen_t *)&addrlen);
+                    if (clientfd == -1)
                     {
                         perror("accept error");
                     }
                     else
                     {
                         // Add client to set
-                        FD_SET(clientfd[clientnum], &fds);
+                        FD_SET(clientfd, &fds);
 
                         // Print info
                         printf("\n---New client connection---\n");
-                        printf("socket fd is %d , ip is : %s , port : %d \n", clientfd[clientnum], inet_ntoa(addr[clientnum].sin_addr), ntohs(addr[clientnum].sin_port));
+                        printf("socket fd is %d , ip is : %s , port : %d \n", clientfd, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
                     }
-                    ++clientnum;
                 }
 
                 /*
@@ -256,6 +254,8 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                 */
                 else
                 {
+                    printf("\nStart to handle a request..., socket is %d\n", i);
+
                     // Buffer of request&response
                     char buf[CONTENTLEN];
                     memset(buf, 0, CONTENTLEN * sizeof(char));
@@ -291,13 +291,13 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     /*
                     (1) Recv the request
                     */
-                    printf("###################################################################\n\n");
 
                     nbytes = (ssize_t)recv(i, buf, sizeof(buf), 0);
-                    printf("%.*s", nbytes, buf);
 
+                    printf("Recv the request, nbytes: %d\n", nbytes);
                     printf("###################################################################\n\n");
-                    printf("nbytes: %d\n", nbytes);
+                    printf("%.*s", nbytes, buf);
+                    printf("###################################################################\n\n");
 
                     // nbytes = send(proxyfd2, buf, sizeof(buf), 0);
                     // nbytes = recv(proxyfd2, buf, sizeof(buf), 0);
@@ -307,14 +307,17 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     if (nbytes == -1)
                     {
                         // Close the socket and Clear fd
-                        close(i);
-                        FD_CLR(i, &fds);
+                        // close(i);
+                        // FD_CLR(i, &fds);
+                        perror("Error receiving request");
                         continue;
                     }
 
                     // Parse content type
                     nbytes = readline(buf, line_buf, sizeof(buf), offset);
+                    offset += nbytes + 1; // Add 1 for "\n"
                     sscanf(line_buf, "%s %s %s", method, uri, version);
+
                     printf("method: %s, uri: %s, version: %s\n", method, uri, version);
 
                     // Read the tail
@@ -324,9 +327,14 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         nbytes = readline(buf, line_buf, sizeof(buf), offset);
                         strcat(tail, line_buf);
 
-                        // Add 1 for "\n"
                         offset += nbytes + 1;
                     }
+
+                    // Read the last /r/n
+                    nbytes = readline(buf, line_buf, sizeof(buf), offset);
+                    strcat(tail, line_buf);
+
+                    printf("Finish read tail, result:\n%s\n", tail);
 
                     // IS video chunk
                     if (strstr(uri, "Seg") && strstr(uri, "Frag"))
@@ -345,7 +353,6 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     {
                         strcpy(request, buf);
                     }
-                    // !!! buf 不对就没法 receive， 直接卡死
 
                     /*
                     (2) Send revised request
@@ -356,15 +363,13 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     nbytes = (ssize_t)send(proxyfd2, request, sizeof(request), 0);
                     if (nbytes == -1)
                     {
-                        // perror("Error sending request message");
+                        perror("Error sending request message");
                         exit(0);
                     }
-                    printf("nbytes is %d, Done\n", nbytes);
 
+                    printf(", Done, nbytes is %d\n", nbytes);
                     printf("###################################################################\n\n");
-
                     printf("%s", request);
-
                     printf("###################################################################\n\n");
 
                     // Clean buf
@@ -373,8 +378,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     printf("Done\n");
 
                     // Make sure server will reply
-                    strcpy(buf, "\r\n\r\n");
-                    nbytes = (ssize_t)send(proxyfd2, request, sizeof(request), 0);
+                    nbytes = (ssize_t)send(proxyfd2, buf, sizeof(buf), 0);
                     memset(buf, 0, CONTENTLEN * sizeof(char));
 
                     /*
@@ -392,10 +396,14 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     nbytes = (ssize_t)recv(proxyfd2, buf, HEADERLEN * sizeof(char), 0);
                     if (nbytes == -1)
                     {
-                        // perror("Error streaming video");
-                        exit(0);
+                        perror("Error receiving response");
+                        continue;
                     }
-                    printf("Done\n");
+
+                    printf(", Done, nbytes is %d\n", nbytes);
+                    printf("###################################################################\n\n");
+                    printf("%s", buf);
+                    printf("###################################################################\n\n");
 
                     // Content length parameters
                     int first_read = nbytes;
@@ -405,7 +413,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     // Parse content length
                     offset = 0;
                     printf("Parse content length\n");
-                    while (nbytes)
+                    while (strcmp(line_buf, "\r\n"))
                     {
                         memset(line_buf, 0, HEADERLEN * sizeof(char));
                         nbytes = readline(buf, line_buf, sizeof(line_buf), offset);
@@ -414,37 +422,32 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         if (cl_addr)
                         {
                             sscanf(cl_addr, "Content-Length: %d", &content_length);
-                            printf("Content-Length: %d\n", content_length);
                         }
 
                         offset += nbytes + 1;
-
-                        if (strcmp(line_buf, "\r\n") == 0)
-                        {
-                            break;
-                        }
                     }
-
-                    printf("###################################################################\n\n");
-
-                    printf("%.*s", offset, buf);
-
-                    printf("###################################################################\n\n");
 
                     // Recv (continue)
                     remain_to_read = content_length - (first_read - offset);
+
+                    printf("Header length: %d\n", offset);
+                    printf("Content-Length: %d\n", content_length);
+                    printf("Remain to read: %d\n", remain_to_read);
+
                     char *buf_ptr = buf + first_read;
                     while (remain_to_read)
                     {
                         nbytes = (ssize_t)recv(proxyfd2, buf_ptr, remain_to_read * sizeof(char), 0);
                         if (nbytes == -1)
                         {
-                            // perror("Error streaming video");
+                            perror("Error receiving content");
                             exit(0);
                         }
                         remain_to_read -= nbytes;
                         buf_ptr += nbytes;
                     }
+
+                    printf("Remain to read: %d\n", remain_to_read);
 
                     // IS Video meta
                     if (strstr(uri, ".f4m"))
@@ -483,17 +486,10 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         T_cur = alpha * T_new + (1 - alpha) * T_cur;
 
                         // Get client ip
-                        int j = 0;
-                        for (; j < clientnum; ++j)
-                        {
-                            if (clientfd[j] == i)
-                            {
-                                break;
-                            }
-                        }
+                        getpeername(i, (struct sockaddr *)&addr, (socklen_t *)&addrlen);
 
-                        fprintf(logFile, "%s %s %s %lf %lf %lf %d\n", inet_ntoa(addr[j].sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
-                        printf("Generate log: %s %s %s %lf %lf %lf %d\n", inet_ntoa(addr[j].sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
+                        fprintf(logFile, "%s %s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
+                        printf("Generate log: %s %s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
                     }
 
                     /*
@@ -504,22 +500,19 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     nbytes = (ssize_t)send(i, buf, sizeof(buf), 0);
                     if (nbytes == -1)
                     {
-                        // perror("Error streaming video");
-                        exit(0);
+                        perror("Error sending response");
+                        continue;
                     }
 
+                    printf("Send response, nbytes: %d\n", nbytes);
                     printf("###################################################################\n\n");
-
                     printf("%s", buf);
-
                     printf("###################################################################\n\n");
 
                     // Make sure server will reply
                     memset(buf, 0, CONTENTLEN * sizeof(char));
-                    strcpy(buf, "\0\0\0\0");
-                    nbytes = (ssize_t)send(proxyfd2, request, sizeof(request), 0);
+                    nbytes = (ssize_t)send(proxyfd2, buf, sizeof(buf), 0);
                     memset(buf, 0, CONTENTLEN * sizeof(char));
-
                 }
             }
         }

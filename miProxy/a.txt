@@ -2,7 +2,10 @@ Successfully make client, socket: 4
 Successfully make server, socket: 5
 
 ---New client connection---
-socket fd is 6 , ip is : 127.0.0.1 , port : 57324 
+socket fd is 6 , ip is : 127.0.0.1 , port : 57488 
+
+Start to handle a request..., socket is 6
+Recv the request, nbytes: 452
 ###################################################################
 
 GET /index.html HTTP/1.1
@@ -13,12 +16,27 @@ Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
+If-Modified-Since: Mon, 01 Jan 2018 00:38:10 GMT
+If-None-Match: W/"49618-764-5afdaed4c2c8b"
+Cache-Control: max-age=0
 
 ###################################################################
 
-nbytes: 332
 method: GET, uri: /index.html, version: HTTP/1.1
-Send...nbytes is 1024, Done
+Finish read tail, result:
+Host: 127.0.0.1:8888
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+If-Modified-Since: Mon, 01 Jan 2018 00:38:10 GMT
+If-None-Match: W/"49618-764-5afdaed4c2c8b"
+Cache-Control: max-age=0
+
+
+Send..., Done, nbytes is 1024
 ###################################################################
 
 GET /index.html HTTP/1.1
@@ -29,20 +47,21 @@ Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
+If-Modified-Since: Mon, 01 Jan 2018 00:38:10 GMT
+If-None-Match: W/"49618-764-5afdaed4c2c8b"
+Cache-Control: max-age=0
 
 ###################################################################
 
 Clean buf...Done
-Start timing...start time: 4450, Done
-Recv first chunk...Done
-Parse content length
-Content-Length: 1892
+Start timing...start time: 6944, Done
+Recv first chunk..., Done, nbytes is 1024
 ###################################################################
 
 HTTP/1.1 200 OK
-Date: Mon, 01 Jan 2018 00:03:07 GMT
+Date: Mon, 01 Jan 2018 00:38:47 GMT
 Server: Apache/2.2.32 (Unix)
-Last-Modified: Mon, 01 Jan 2018 00:03:07 GMT
+Last-Modified: Mon, 01 Jan 2018 00:38:47 GMT
 ETag: W/"49618-764-5afdaed4c2c8b"
 Accept-Ranges: bytes
 Content-Length: 1892
@@ -50,14 +69,42 @@ Keep-Alive: timeout=30000, max=500000
 Connection: Keep-Alive
 Content-Type: text/html
 
-###################################################################
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Strobe Media Playback</title>
+    <script type="text/javascript" src="swfobject.js"></script>
+	<script type="text/javascript">  		
+        var loc = window.location.host
 
+    	// Create a StrobeMediaPlayback configuration
+		var parameters =
+			{	src: "http://"+loc+"/vod/big_buck_bunny.f4m"
+   			,	autoPlay: true
+			,	controlBarAutoHide: false
+			,   javascriptCallbackFunction: "onJavaScriptBridgeCreated"
+			};
+    		
+		// Embed the player SWF:
+		swfobject.embedSWF
+			( "StrobeMediaPlayback.swf"
+			, "strobeMediaPlayback"
+			, 1280
+			, 720
+			, ###################################################################
+
+Parse content length
+Header length: 299
+Content-Length: 1892
+Remain to read: 1167
+Remain to read: 0
+Send response, nbytes: 1000000
 ###################################################################
 
 HTTP/1.1 200 OK
-Date: Mon, 01 Jan 2018 00:03:07 GMT
+Date: Mon, 01 Jan 2018 00:38:47 GMT
 Server: Apache/2.2.32 (Unix)
-Last-Modified: Mon, 01 Jan 2018 00:03:07 GMT
+Last-Modified: Mon, 01 Jan 2018 00:38:47 GMT
 ETag: W/"49618-764-5afdaed4c2c8b"
 Accept-Ranges: bytes
 Content-Length: 1892
@@ -138,4 +185,21 @@ Content-Type: text/html
 </html>
 ###################################################################
 
-############################
+
+Start to handle a request..., socket is 6
+Recv the request, nbytes: -1
+###################################################################
+
+###################################################################
+
+
+Start to handle a request..., socket is 6
+Recv the request, nbytes: 0
+###################################################################
+
+###################################################################
+
+method: , uri: , version: 
+Finish read tail, result:
+
+Send..., Done, 
