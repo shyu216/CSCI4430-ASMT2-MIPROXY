@@ -2,6 +2,8 @@
 # 运行步骤
 ### 1. change time to enable flash
 ```
+#关闭时间网络同步#
+timedatectl set-ntp false
 sudo date +%Y%m%d -s 20180101
 ```
 ### 2. 启动server
