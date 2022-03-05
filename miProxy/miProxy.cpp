@@ -9,12 +9,19 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/timeb.h>
 
 #include <time.h>
 
 #define MAXCLIENTNUM 16
 #define HEADERLEN 1024
 #define CONTENTLEN 1000000
+
+long gettime(void){
+    struct timeb t;
+    ftime (&t);
+    return t.time*1000+t.millitm;
+}
 
 // MAKE SERVER SOCKET IN PROXY FOR REAL CLIENT BROWSER
 // (1)
@@ -179,7 +186,6 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
     (1) Preparation
     */
 
-    // Open log file
     FILE *logFile;
     logFile = fopen(filename, "w+");
     if (logFile == NULL)
@@ -187,6 +193,8 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
         perror("Error creating/opening file");
         exit(0);
     }
+
+    fclose(logFile);
 
     // Initialize proxy socket
     int proxy_cli_fd;
@@ -213,6 +221,16 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
     // Listen forever
     while (1)
     {
+
+        // Open log file
+        FILE *logFile;
+        logFile = fopen(filename, "a+");
+        if (logFile == NULL)
+        {
+            perror("Error creating/opening file");
+            exit(0);
+        }
+
         printf("Loop forever\n");
 
         // Clear and Add socket to set
@@ -431,8 +449,8 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
 
                     // Start timing
                     printf("Start timing...");
-                    clock_t start, end;
-                    start = clock();
+                    long start, end;
+                    start = gettime();
                     printf("start time: %ld, Done\n", start);
 
                     // Recv first chunk
@@ -532,18 +550,18 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         printf("IS Video chunk\n");
 
                         // ENd timting
-                        end = clock();
-                        double stamp = (end - start) / CLOCKS_PER_SEC;
+                        end = gettime();
+                        double stamp = (double)(end - start)/1000;
 
                         // Calculate time
-                        T_new = content_length / (stamp * 1000);
+                        T_new =(double) content_length / (end - start)*1000 *8;
                         T_cur = alpha * T_new + (1 - alpha) * T_cur;
 
                         // Get client ip
                         getpeername(i, (struct sockaddr *)&addr, (socklen_t *)&addrlen);
 
-                        fprintf(logFile, "%s %s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
-                        printf("Generate log: %s %s %s %lf %lf %lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
+                        fprintf(logFile, "%s %s %s %.3lf %.3lf %.3lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
+                        printf("lysxGenerate log: %s %s %s %.3lf %.3lf %.3lf %d\n", inet_ntoa(addr.sin_addr), chunk, www_ip, stamp, T_new, T_cur, br);
                     }
 
                     else
@@ -593,6 +611,7 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                 }
             }
         }
+        fclose(logFile);
     }
 }
 
