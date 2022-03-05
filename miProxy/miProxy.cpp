@@ -196,13 +196,10 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
     struct sockaddr_in addr;
     int addrlen = sizeof(addr);
     int clientfd;
+    int client_list[MAXCLIENTNUM] = {0};
 
     // Initialize socket descriptors
     fd_set fds;
-
-    // Clear and Add proxy to set
-    FD_ZERO(&fds);
-    FD_SET(proxy_ser_fd, &fds);
 
     // Initialize throughput
     double T_cur = 0.0;
@@ -217,7 +214,18 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
     while (1)
     {
         printf("Loop forever\n");
-        
+
+        // Clear and Add socket to set
+        FD_ZERO(&fds);
+        FD_SET(proxy_ser_fd, &fds);
+        for (int i = 0; i < MAXCLIENTNUM; ++i)
+        {
+            if (client_list[i] > 0)
+            {
+                FD_SET(client_list[i], &fds);
+            }
+        }
+
         // Select
         if (select(FD_SETSIZE, &fds, NULL, NULL, NULL) == -1)
         {
@@ -250,7 +258,14 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     else
                     {
                         // Add client to set
-                        FD_SET(clientfd, &fds);
+                        for (int j = 0; j < MAXCLIENTNUM; ++j)
+                        {
+                            if (client_list[j] == 0)
+                            {
+                                client_list[j] = clientfd;
+                                break;
+                            }
+                        }
 
                         // Print info
                         printf("\n---New client connection---\n");
@@ -320,10 +335,20 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                         // Close the socket and Clear fd
                         perror("Error receiving request");
                         close(i);
-                        FD_CLR(i, &fds);
+                        for (int j = 0; j < MAXCLIENTNUM; ++j)
+                        {
+                            if (client_list[j] == i)
+                            {
+                                client_list[j] = 0;
+                                break;
+                            }
+                        }
 
                         printf("Socket %d removed\n", i);
-                        break;
+
+                        // Close
+                        close(proxy_cli_fd);
+                        continue;
                     }
 
                     // Parse content type
@@ -491,6 +516,8 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                             if (br_addr)
                             {
                                 sscanf(br_addr, "bitrate=\"%d\"", &br_list[br_len]);
+
+                                printf("Add bitrate: %d\n", br_list[br_len]);
                                 ++br_len;
                             }
                         }
