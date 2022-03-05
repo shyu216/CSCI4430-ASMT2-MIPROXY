@@ -1,10 +1,12 @@
-Successfully make client, socket: 4
-Successfully make server, socket: 5
+Successfully make server, socket: 4
+Loop forever
+Waiting connection
 
 ---New client connection---
-socket fd is 6 , ip is : 127.0.0.1 , port : 57488 
+socket fd is 5 , ip is : 127.0.0.1 , port : 58382 
 
-Start to handle a request..., socket is 6
+Start to handle a request..., socket is 5
+Successfully make client, socket: 6
 Recv the request, nbytes: 452
 ###################################################################
 
@@ -16,7 +18,7 @@ Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
-If-Modified-Since: Mon, 01 Jan 2018 00:38:10 GMT
+If-Modified-Since: Mon, 01 Jan 2018 02:01:51 GMT
 If-None-Match: W/"49618-764-5afdaed4c2c8b"
 Cache-Control: max-age=0
 
@@ -31,7 +33,7 @@ Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
-If-Modified-Since: Mon, 01 Jan 2018 00:38:10 GMT
+If-Modified-Since: Mon, 01 Jan 2018 02:01:51 GMT
 If-None-Match: W/"49618-764-5afdaed4c2c8b"
 Cache-Control: max-age=0
 
@@ -47,21 +49,26 @@ Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
-If-Modified-Since: Mon, 01 Jan 2018 00:38:10 GMT
+If-Modified-Since: Mon, 01 Jan 2018 02:01:51 GMT
 If-None-Match: W/"49618-764-5afdaed4c2c8b"
 Cache-Control: max-age=0
 
 ###################################################################
 
 Clean buf...Done
-Start timing...start time: 6944, Done
+Send again..., nbytes is 2
+###################################################################
+
+###################################################################
+
+Start timing...start time: 6217, Done
 Recv first chunk..., Done, nbytes is 1024
 ###################################################################
 
 HTTP/1.1 200 OK
-Date: Mon, 01 Jan 2018 00:38:47 GMT
+Date: Mon, 01 Jan 2018 02:02:45 GMT
 Server: Apache/2.2.32 (Unix)
-Last-Modified: Mon, 01 Jan 2018 00:38:47 GMT
+Last-Modified: Mon, 01 Jan 2018 02:02:45 GMT
 ETag: W/"49618-764-5afdaed4c2c8b"
 Accept-Ranges: bytes
 Content-Length: 1892
@@ -98,21 +105,26 @@ Header length: 299
 Content-Length: 1892
 Remain to read: 1167
 Remain to read: 0
-Send response, nbytes: 1000000
+IS something else
+Send response, nbytes: 310720
 ###################################################################
 
-HTTP/1.1 200 OK
-Date: Mon, 01 Jan 2018 00:38:47 GMT
+HTTP/1.1 400 Bad Request
+Date: Mon, 01 Jan 2018 02:02:45 GMT
 Server: Apache/2.2.32 (Unix)
-Last-Modified: Mon, 01 Jan 2018 00:38:47 GMT
-ETag: W/"49618-764-5afdaed4c2c8b"
-Accept-Ranges: bytes
-Content-Length: 1892
-Keep-Alive: timeout=30000, max=500000
-Connection: Keep-Alive
-Content-Type: text/html
+Content-Length: 226
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>400 Bad Request</title>
+</head><body>
+<h1>Bad Request</h1>
+<p>Your browser sent a request that this server could not understand.<br />
+</p>
+</body></html>
+">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>Strobe Media Playback</title>
@@ -185,21 +197,13 @@ Content-Type: text/html
 </html>
 ###################################################################
 
+Loop forever
 
-Start to handle a request..., socket is 6
+Start to handle a request..., socket is 5
+Successfully make client, socket: 6
 Recv the request, nbytes: -1
 ###################################################################
 
 ###################################################################
 
-
-Start to handle a request..., socket is 6
-Recv the request, nbytes: 0
-###################################################################
-
-###################################################################
-
-method: , uri: , version: 
-Finish read tail, result:
-
-Send..., Done, 
+Socket 5 remove
