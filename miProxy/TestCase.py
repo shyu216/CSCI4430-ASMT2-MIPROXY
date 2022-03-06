@@ -482,9 +482,12 @@ if __name__ == "__main__":
             testcase6,
             testcase7,
             testcase8]
-    assert len(sys.argv) == 2, "Argument number error"
-    case_idx = int(sys.argv[1]) - 1
-    assert 0 <= case_idx <= 7, "Test case number not in 1-8"
-    testcase_list[case_idx]()
-
+    if len(sys.argv) == 2:
+        assert len(sys.argv) == 2, "Argument number error"
+        case_idx = int(sys.argv[1]) - 1
+        assert 0 <= case_idx <= 7, "Test case number not in 1-8"
+        testcase_list[case_idx]()
+    else:
+        for i in range(8):
+            testcase_list[i]()
     
