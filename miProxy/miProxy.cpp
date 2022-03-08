@@ -10,20 +10,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/time.h>
-// #include <sys/timeb.h>
 
 #include <time.h>
 
 #define MAXCLIENTNUM 16
 #define HEADERLEN 102400
 #define CONTENTLEN 1000000
-
-// long gettime(void)
-// {
-//     struct timeb t;
-//     ftime(&t);
-//     return t.time * 1000 + t.millitm;
-// }
 
 // MAKE SERVER SOCKET IN PROXY FOR REAL CLIENT BROWSER
 // (1)
@@ -331,11 +323,6 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     // printf("%.*s", nbytes, buf);
                     // printf("###################################################################\n\n");
 
-                    // nbytes = send(proxy_cli_fd, buf, sizeof(buf), 0);
-                    // nbytes = recv(proxy_cli_fd, buf, sizeof(buf), 0);
-                    // nbytes = send(i, buf, sizeof(buf), 0);
-                    // printf("%s", buf);
-
                     if (nbytes < 1)
                     {
                         // Close the socket and Clear fd
@@ -349,10 +336,6 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                                 break;
                             }
                         }
-
-                        // printf("Socket %d removed\n", i);
-
-                        // Close
                         close(proxy_cli_fd);
                         continue;
                     }
@@ -418,14 +401,13 @@ int handler(int listen_port, char *www_ip, double alpha, char *filename)
                     // printf("###################################################################\n\n");
 
                     // Clean buf
-                    // printf("Clean buf...");
                     memset(buf, 0, CONTENTLEN * sizeof(char));
-                    // printf("Done\n");
 
                     // Make sure server will reply // 为森么要这样子server才会回啊？？？
                     strcat(buf, "\r\n");
                     nbytes = (int)send(proxy_cli_fd, buf, 2 * sizeof(char), 0);
                     memset(buf, 0, CONTENTLEN * sizeof(char));
+                    
                     // printf("Send only \\r\\n ..., nbytes is %d\n", nbytes);
                     // printf("###################################################################\n\n");
                     // printf("%s", buf);
